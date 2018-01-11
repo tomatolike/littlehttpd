@@ -16,7 +16,7 @@
 
 #define ISspace(x) isspace((int)(x))//定义一个判断是否为空格的宏
 #define SERVER_STRING "Server: nickxueweihttpd/0.1.0\r\n"
-#define NOT_FOUND "HTTP/1.0 404 NOT FOUND\r\nServer: nickxueweihttpd/0.1.0\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>Not Found</TITLE>\r\n<BODY><P>The server could not fulfill\r\nyour request because the resource specified\r\nis unavailable or nonexistent.\r\n</BODY></HTML>\r\n"
+#define NOT_FOUND "HTTP/1.0 404 NOT FOUND\r\nServer: nickxueweihttpd/0.1.0\r\nContent-Type: text/html\r\n\r\n<HTML><TITLE>Not Found</TITLE>\r\n<BODY><P>The server could not fulfill\r\nyour request because the resource specified\r\nis unavailable or nonexistent.</P>\r\nWe cannot find the file!\r\n</BODY></HTML>\r\n"
 #define HEADER "HTTP/1.0 200 OK\r\nServer: nickxueweihttpd/0.1.0\r\n"
 #define STDIN   0
 #define STDOUT  1
@@ -31,9 +31,9 @@ int get_line(int sock, char *buf, int size);
 int main(void)
 {
     //定义一个我们放文件的绝对地址
-    strcpy(iloveyou,"/Users/like/Desktop/nicky");
+    strcpy(iloveyou,"/home/nick/httpd");
     int server_sock = -1;
-    u_short port = 8000;//定义端口为80
+    u_short port = 80;//定义端口为80
     int client_sock = -1;
     struct sockaddr_in client_name;//IP地址结构
     socklen_t  client_name_len = sizeof(client_name);
@@ -106,7 +106,12 @@ void accept_request(void *arg){
         strcat(path,url);
         printf("让我们来看看文件地址对不对: %s %c\n",path,path[strlen(path)-1]);
         //然后我们把文件地址传给响应函数
-        serve_file(client,path);
+	if(path[strlen(path)-1]!='l' && path[strlen(path)-1]!='g' && path[strlen(path)-1]!='t'){
+		memset(buf,0,sizeof(buf));
+		sprintf(buf,NOT_FOUND);
+		send(client,buf,strlen(buf),0);
+	}
+	else serve_file(client,path);
         printf("传输字节完毕！\n");
     }
     else if(strcasecmp(method,"POST")==0){
@@ -136,13 +141,16 @@ void serve_file(int client, const char *filename)
     printf("0\n");
     //然后打开文件开始读取
     resource = fopen(filename, "rb");
+    printf("0.1\n");
     if (resource == NULL){
         //如果没找到，返回notfound
         sprintf(buf, NOT_FOUND);
         send(client, buf, strlen(buf), 0);
+	printf("Cannot find!\n");
     }
     else
     {
+	printf("Find!\n");
         //先获取文件的字节大小
         FILE *fp = resource;
         fseek(fp,0,SEEK_END);
@@ -209,8 +217,8 @@ void serve_file(int client, const char *filename)
         }
         
         printf("结束文件传输%d\n",count);
+    	fclose(resource);
     }
-    fclose(resource);
 }
 
 //读取socket的一行，并以换行符结尾
